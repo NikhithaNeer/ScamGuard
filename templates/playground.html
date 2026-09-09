@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}ScamGuard Playground{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1 class="center">ScamGuard Playground</h1>
+  <p class="sub center">
+    Try sample job postings or paste your own. No login required.
+  </p>
+
+  <!-- Form -->
+  <form method="POST" class="form" style="margin-top:1.3rem;">
+    <div class="form-group">
+      <label for="job_posting">Paste the Job Posting</label>
+      <textarea id="job_posting" name="job_posting"
+                placeholder="Paste any job description here…"
+                rows="10">{{ input_text or "" }}</textarea>
+    </div>
+
+    <div class="button-group">
+      <button type="submit" class="btn btn-primary">🔍 Analyze</button>
+      <button type="button" id="btn-clear" class="btn btn-muted">🧹 Clear</button>
+      {% if not session.get("user_id") %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline">
+          🔐 Login for Full Scanner & History
+        </a>
+      {% else %}
+        <a href="{{ url_for('index') }}" class="btn btn-outline">
+          📊 Go to Full Scanner
+        </a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- ================= Examples (preview list, BELOW textarea) ================= -->
+  {% if examples and not prediction %}
+  <section id="example-section" style="margin-top:1.5rem;">
+    <h3 style="margin-bottom:0.5rem;">Or start with a sample job posting</h3>
+    <p class="sub" style="margin-top:0;">
+      Click one example to load it into the box above. After you pick an example,
+      this list will be hidden.
+    </p>
+
+    <div class="example-list">
+      {% for ex in examples %}
+        <button type="button"
+                class="example-card"
+                data-text="{{ ex.text|e }}">
+          <div class="example-title">
+            {{ ex.title }}
+            {% if ex.label %}
+              <span class="example-pill example-pill-{{ ex.label|lower }}">
+                {{ ex.label }}
+              </span>
+            {% endif %}
+          </div>
+          <div class="example-preview">
+            {{ ex.text }}
+          </div>
+        </button>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Error -->
+  {% if error_message %}
+    <div class="result error">
+      {{ error_message }}
+    </div>
+  {% endif %}
+
+  <!-- Prediction result -->
+  {% if prediction %}
+  <div class="result {% if 'Fake' in prediction %}fake{% elif 'Needs Review' in prediction %}warning{% else %}real{% endif %}">
+    <strong>{{ prediction }}</strong>
+
+    {% if confidence is not none %}
+      <div class="confidence">
+        Confidence: <strong>{{ "%.2f"|format(confidence) }}%</strong>
+      </div>
+      <div class="meter" style="margin-top:.4rem;">
+        <div class="meter-fill" style="width: {{ confidence }}%;"></div>
+      </div>
+    {% endif %}
+
+    {% if final_proba is not none %}
+      <p class="muted" style="margin-top:0.4rem; font-size:0.85rem;">
+        Ensemble P(fake) = {{ "%.2f"|format(final_proba*100) }}% |
+        Threshold = {{ "%.0f"|format(ensemble_threshold*100) }}% |
+        Review band ±{{ "%.0f"|format(review_band*100) }}%
+      </p>
+    {% endif %}
+  </div>
+
+  {% if per_model and per_model|length > 0 %}
+    <div style="margin-top:1rem;">
+      <h3 style="margin:0 0 .4rem;font-size:0.95rem;">How the models voted</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+        <thead>
+          <tr style="border-bottom:1px solid rgba(148,163,184,0.4);">
+            <th style="text-align:left;padding:4px 2px;">Model</th>
+            <th style="text-align:left;padding:4px 2px;">P(fake)</th>
+            <th style="text-align:left;padding:4px 2px;">Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, prob in per_model.items() %}
+            {% set m_label = 'Fake' if prob >= ensemble_threshold else 'Real' %}
+            <tr>
+              <td style="padding:3px 2px;">{{ name }}</td>
+              <td style="padding:3px 2px;">{{ "%.3f"|format(prob) }}</td>
+              <td style="padding:3px 2px;">
+                {% if m_label == 'Fake' %}
+                  ⚠️ Fake
+                {% else %}
+                  ✅ Real
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Extracted info (if you wired text_extractor here as well) -->
+  {% if extracted %}
+  <div class="card" style="margin-top: 1.5rem;">
+    <h2>🔍 Extracted Job Details</h2>
+    <p class="sub">
+      These fields were automatically extracted from the job description you pasted.
+    </p>
+
+    <div class="extract-grid">
+      <div class="extract-row">
+        <span class="extract-label">Position Title</span>
+        <span class="extract-value">{{ extracted.position_title or "—" }}</span>
+      </div>
+
+      <div class="extract-row">
+        <span class="extract-label">Remote</span>
+        <span class="extract-value">
+          {% if extracted.remote == "Yes" %}
+            🌐 Remote
+          {% elif extracted.remote == "No" %}
+            🏢 On-site
+          {% else %}
+            ❓ Unknown
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="extract-row">
+        <span class="extract-label">Employment Type</span>
+        <span class="extract-value">{{ extracted.employment_type or "Unknown" }}</span>
+      </div>
+
+      <div class="extract-row">
+        <span class="extract-label">Salary (if mentioned)</span>
+        <span class="extract-value">{{ extracted.salary or "Not specified" }}</span>
+      </div>
+
+      <div class="extract-row">
+        <span class="extract-label">Experience Level</span>
+        <span class="extract-value">{{ extracted.experience_level or "Unknown" }}</span>
+      </div>
+
+      <div class="extract-row">
+        <span class="extract-label">Benefits (snippet)</span>
+        <span class="extract-value">
+          {% if extracted.benefits and extracted.benefits != "Unknown" %}
+            {{ extracted.benefits }}
+          {% else %}
+            Not clearly mentioned
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="extract-row">
+        <span class="extract-label">Requests Sensitive Personal Info?</span>
+        <span class="extract-value">
+          {% if extracted.requires_personal_info == "Yes" %}
+            <span class="extract-badge danger">⚠ Yes – Sensitive Info Requested</span>
+          {% else %}
+            <span class="extract-badge safe">No suspicious personal info requested</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+  .example-list{
+    margin-top:0.8rem;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:0.6rem;
+  }
+  .example-card{
+    text-align:left;
+    border-radius:0.8rem;
+    padding:0.6rem 0.8rem;
+    border:1px solid var(--border);
+    background:#020617;
+    cursor:pointer;
+    transition:background .15s ease, transform .08s ease, border-color .15s ease;
+    display:flex;
+    flex-direction:column;
+    gap:0.25rem;
+  }
+  .example-card:hover{
+    background:#020617ee;
+    border-color:#1d4ed8;
+    transform:translateY(-1px);
+  }
+  .example-title{
+    font-weight:600;
+    font-size:0.92rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .example-preview{
+    font-size:0.8rem;
+    color:#9ca3af;
+    display:-webkit-box;
+    -webkit-line-clamp:2;      /* <<< show only 1–2 lines */
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .example-pill{
+    font-size:0.7rem;
+    padding:2px 6px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,0.4);
+  }
+  .example-pill-fake{
+    border-color:#f97373;
+    color:#fecaca;
+  }
+  .example-pill-real{
+    border-color:#4ade80;
+    color:#bbf7d0;
+  }
+</style>
+
+<script>
+  // Fill textarea from example cards & hide example list
+  document.querySelectorAll(".example-card").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const txt = btn.getAttribute("data-text") || "";
+      const ta = document.getElementById("job_posting");
+      if (ta){
+        ta.value = txt;
+        ta.focus();
+        ta.scrollIntoView({behavior:"smooth", block:"start"});
+      }
+      const section = document.getElementById("example-section");
+      if (section){
+        section.style.display = "none";
+      }
+    });
+  });
+
+  // Clear button: reset whole playground (textarea + results)
+  document.getElementById("btn-clear")?.addEventListener("click", () => {
+    window.location.href = "{{ url_for('playground') }}";
+  });
+</script>
+{% endblock %}

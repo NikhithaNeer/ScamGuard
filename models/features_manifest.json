@@ -1,0 +1,27 @@
+{
+  "engineered_cols": [
+    "telecommuting",
+    "has_company_logo",
+    "has_questions",
+    "char_count",
+    "word_count",
+    "avg_word_length",
+    "num_exclamations",
+    "num_dollar",
+    "num_uppercase_words",
+    "avg_sentence_length",
+    "spelling_errors",
+    "has_company_profile",
+    "has_requirements",
+    "has_benefits"
+  ],
+  "text_col": "combined_text",
+  "tfidf_max_features": 5000,
+  "tfidf_ngram_range": [
+    1,
+    2
+  ],
+  "tfidf_min_df": 3,
+  "n_eng_features": 14,
+  "n_text_features": 5000
+}

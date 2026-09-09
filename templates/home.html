@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}ScamGuard – Spot Fake Job Postings{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 960px; margin: 0 auto;">
+  <!-- Hero -->
+  <section style="text-align: left; margin-bottom: 1.75rem;">
+    <h1 style="font-size: 2.1rem; margin-bottom: .5rem;">🛡️ Welcome to ScamGuard</h1>
+    <p class="sub" style="max-width: 680px;">
+      ScamGuard helps you <strong>analyze job postings</strong> and flag
+      potentially fake or risky opportunities using a voting ensemble of
+      machine-learning models (Logistic Regression, Random Forest, XGBoost).
+    </p>
+  </section>
+
+  <!-- What this website does -->
+  <section style="margin-bottom: 1.75rem;">
+    <h2 style="font-size: 1.3rem; margin-bottom: .5rem;">What this website is</h2>
+    <ul style="margin-left: 1.1rem; line-height: 1.6;">
+      <li><strong>Job Scam Detector:</strong> Paste any job ad and get a prediction:
+          <em>Real</em>, <em>Fake</em>, or <em>Needs Review</em>.</li>
+      <li><strong>Model Transparency:</strong> See how each model voted and the
+          confidence score behind the final decision.</li>
+      <li><strong>History & Admin Review:</strong> Logged-in users get prediction history,
+          while admins can review low-confidence cases.</li>
+    </ul>
+  </section>
+
+  <!-- How to use -->
+  <section style="margin-bottom: 1.75rem;">
+    <h2 style="font-size: 1.3rem; margin-bottom: .5rem;">How to use ScamGuard</h2>
+    <ol style="margin-left: 1.1rem; line-height: 1.6;">
+      <li>Find a job posting you’re not sure about (from email, websites, social media, etc.).</li>
+      <li>Copy the entire text of the posting.</li>
+      <li>Go to the <strong>Playground</strong> or the main <strong>Scanner</strong>, and paste it into the text box.</li>
+      <li>Click <strong>Analyze</strong> to see:
+        <ul style="margin-left: 1.1rem; margin-top:.4rem;">
+          <li>Overall prediction (Real / Fake / Needs Review)</li>
+          <li>Confidence bar</li>
+          <li>Per-model votes (LogReg, RandomForest, XGBoost)</li>
+          <li>Auto-extracted info (role, remote/on-site, benefits, sensitive-info requests, etc.)</li>
+        </ul>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Recommended formatting -->
+  <section style="margin-bottom: 1.75rem;">
+    <h2 style="font-size: 1.3rem; margin-bottom: .5rem;">Best way to format the job description</h2>
+    <p class="sub" style="margin-bottom:.6rem;">
+      The tool also works on free text, but you’ll get the best extraction and
+      model performance if you structure the posting like this:
+    </p>
+
+    <div style="
+        background: rgba(15,23,42,0.9);
+        border-radius: .75rem;
+        padding: .9rem 1rem;
+        border: 1px solid rgba(148,163,184,0.4);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        font-size: .86rem;
+        white-space: pre-wrap;">
+Title: Software Engineer – Backend
+Company: Northview Services
+Location: Remote / Hybrid
+Description: We are looking for a backend engineer to build APIs and data services...
+Requirements: 3+ years of Python experience, familiarity with Flask or Django...
+Benefits: Health insurance, paid time off, 401(k), remote-friendly.
+Salary: $90,000 – $110,000 / year
+    </div>
+
+    <p style="margin-top:.6rem; font-size:.9rem; color: #aab4c6;">
+      You don’t have to match this exactly&mdash;the detector can still work with
+      messy text. These labels just help the extractor understand what each line means.
+    </p>
+  </section>
+
+  <!-- Call to action -->
+  <section style="
+      margin-top: 2rem;
+      padding: 1.2rem 1rem;
+      border-radius: .9rem;
+      border: 1px dashed rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.7);">
+    <h2 style="font-size: 1.25rem; margin-bottom:.4rem;">Ready to try it out?</h2>
+    <p class="sub" style="margin-bottom: .9rem;">
+      Use the <strong>ScamGuard Playground</strong> to test the scanner with sample job posts
+      (both real and scam) or paste your own description&mdash;no login required.
+    </p>
+    <a href="{{ url_for('playground') }}" class="btn btn-primary">
+      🚀 Try the Sample Scanner (Playground)
+    </a>
+  </section>
+</div>
+{% endblock %}

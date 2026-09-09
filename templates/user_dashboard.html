@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}User Dashboard – ScamGuard{% endblock %}
+
+{% block content %}
+<style>
+  /* --- Dashboard lightweight styles (scoped to this page) --- */
+  .dash-wrap { max-width: 1100px; margin: 0 auto; }
+  .welcome {
+    background: linear-gradient(135deg, #0b1426, #111b34);
+    border: 1px solid var(--border);
+    border-left: 6px solid #22c55e;
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--text);
+    display:flex; align-items:center; gap:.8rem;
+  }
+  .welcome .pill {
+    background:#0f1a2d; border:1px solid var(--border);
+    color:#a7f3d0; font-weight:700; font-size:.85rem;
+    padding:.25rem .6rem; border-radius:999px;
+  }
+
+  .dash-grid {
+    display:grid; gap:1rem;
+    grid-template-columns: 1.2fr .8fr;
+  }
+  @media (max-width: 900px) {
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+
+  .card-dash {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.2rem;
+  }
+  .card-dash h2 {
+    margin: 0 0 .6rem; font-size: 1.35rem;
+  }
+  .muted { color: var(--muted); }
+
+  .quick-actions {
+    display:flex; flex-wrap:wrap; gap:.6rem;
+    margin-top: .6rem;
+  }
+  .qa-btn {
+    border:1px solid var(--border); border-radius:10px;
+    padding:.6rem .9rem; background:#0c1528; color:#e5e7eb;
+    text-decoration:none; display:inline-flex; align-items:center; gap:.45rem;
+    transition:.15s ease; font-weight:600;
+  }
+  .qa-btn:hover { border-color: var(--accent); color:#dbeafe; transform: translateY(-1px); }
+  .qa-btn.primary {
+    background:linear-gradient(180deg, var(--accent), var(--accent-strong));
+    border-color:transparent; color:white;
+  }
+  .qa-btn.primary:hover { filter:brightness(1.05); }
+
+  .list {
+    display:flex; flex-direction:column; gap:.6rem; margin-top:.4rem;
+  }
+  .list-item {
+    border:1px dashed var(--border); border-radius:12px;
+    padding:.7rem .8rem; background:#0b1222a6;
+  }
+  .tag {
+    display:inline-block; padding:.15rem .5rem; border:1px solid var(--border);
+    border-radius:999px; font-size:.75rem; color:#cbd5e1; margin-left:.5rem;
+  }
+
+  .two-col {
+    display:grid; gap:.7rem; grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 580px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+
+<div class="dash-wrap">
+
+  <!-- Welcome banner -->
+  <div class="welcome">
+    <div style="font-size:1.15rem;">👋 Welcome back, <b>{{ username }}</b>!</div>
+    <span class="pill">User</span>
+  </div>
+
+  <div class="dash-grid">
+    <!-- Left: Actions & Tips -->
+    <section class="card-dash">
+      <h2>🚀 Get Started</h2>
+      <div class="muted">Scan job posts, review results, and manage your account.</div>
+    
+    {% if pending_review and pending_review > 0 %}
+     <div style="
+        margin-top:18px;
+        padding:10px 12px;
+        border-radius:10px;
+        background:#fef9c3;
+        border:1px solid #eab30855;
+        color:#854d0e;
+        font-size:14px;">
+      <strong>Heads up:</strong> You have <b>{{ pending_review }}</b> prediction(s) that are
+      currently marked as <b>“Needs Review”</b> by the model.
+      <br/>
+       <a href="{{ url_for('logs') }}" style="color:#b45309;text-decoration:underline;">
+        View them in your Prediction History →
+       </a>
+     </div>
+    {% endif %}
+    
+      <div class="quick-actions">
+        <a class="qa-btn primary" href="{{ url_for('index') }}">🔎 Go to Job Scanner</a>
+        <a class="qa-btn" href="{{ url_for('logs') }}">📜 View Prediction History</a>
+        <a class="qa-btn" href="{{ url_for('account.edit_account') }}">⚙️ Account Settings</a>
+        <a class="qa-btn" href="{{ url_for('auth.logout') }}">🚪 Logout</a>
+      </div>
+
+      <div class="two-col" style="margin-top:1rem;">
+        <div class="list-item">
+          <div><b>Model Status</b><span class="tag">Online</span></div>
+          <div class="muted" style="margin-top:.3rem;">TF-IDF + Random Forest currently loaded.</div>
+        </div>
+        <div class="list-item">
+          <div><b>Confidence Tip</b></div>
+          <div class="muted" style="margin-top:.3rem;">Higher confidence means stronger evidence; always read the text for context.</div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:1.2rem;">💡 Helpful Tips</h2>
+      <div class="list">
+        <div class="list-item">Beware of posts asking for <b>upfront fees</b> or personal documents early.</div>
+        <div class="list-item">Use a company’s <b>official website</b> and email domain to verify job legitimacy.</div>
+        <div class="list-item">Too-good-to-be-true salaries with vague roles are a common red flag.</div>
+      </div>
+    </section>
+
+    <!-- Right: Account summary -->
+    <aside class="card-dash">
+      <h2>👤 Your Account</h2>
+      <div class="muted">Signed in as <b>{{ username }}</b></div>
+
+      <div class="list" style="margin-top:.7rem;">
+        <div class="list-item">
+          <div><b>Role</b></div>
+          <div class="muted">Standard user</div>
+        </div>
+        <div class="list-item">
+          <div><b>Quick Links</b></div>
+          <div class="quick-actions" style="margin-top:.5rem;">
+            <a class="qa-btn" href="{{ url_for('logs') }}">📊 Your Logs</a>
+            <a class="qa-btn" href="{{ url_for('account.edit_account') }}">🔐 Change Password</a>
+          </div>
+        </div>
+        <div class="list-item">
+          <div><b>Need Help?</b></div>
+          <div class="muted">Use Prediction History to review past results or re-scan a posting.</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+</div>
+{% endblock %}

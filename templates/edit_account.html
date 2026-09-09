@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Account - ScamGuard{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2 class="center">Edit Account</h2>
+
+  <form method="POST" class="form">
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" value="{{ user['Name'] }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" value="{{ user['Email'] }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">New Password:</label>
+      <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
+    </div>
+
+    <div class="form-group">
+      <label for="confirm_password">Confirm Password:</label>
+      <input type="password" id="confirm_password" name="confirm_password" placeholder="Leave blank if unchanged">
+    </div>
+
+    <div class="button-group">
+      <button type="submit" class="btn btn-primary">Update Account</button>
+      <a href="{{ url_for('index') }}" class="btn btn-muted">Back to Homepage</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

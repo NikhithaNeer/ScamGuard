@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prediction History – ScamGuard</title>
+  <style>
+    :root{
+      --bg:#0b1221; --panel:#0f1a2d; --line:#1a2942; --text:#e6edf3; --muted:#9fb0c6;
+      --real-bg:#0e3b28; --real-br:#4de0a2; --fake-bg:#432026; --fake-br:#ffb3bf;
+      --review-bg:#4b3a1a; --review-br:#facc15;
+      --accent:#60a5fa;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;padding:32px;background:var(--bg);color:var(--text);
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+    }
+    .container{max-width:1200px;margin:0 auto}
+    h1{margin:0 0 18px;font-size:36px;letter-spacing:.2px}
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+    .link{color:var(--accent);text-decoration:underline}
+
+    /* top controls */
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+    .search{
+      background:#0c1528;border:1px solid var(--line);color:var(--text);
+      padding:8px 12px;border-radius:10px;min-width:260px;outline:none
+    }
+    .hint{color:var(--muted);font-size:12px;margin-bottom:10px}
+
+    /* label filter chips */
+    .filters{
+      display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;
+    }
+    .chip{
+      border-radius:999px;
+      padding:6px 12px;
+      border:1px solid var(--line);
+      background:#0c1528;
+      color:var(--muted);
+      font-size:12px;
+      cursor:pointer;
+      transition:background .15s ease,border-color .15s ease,color .15s ease,transform .08s ease;
+    }
+    .chip:hover{
+      border-color:var(--accent);
+      color:var(--text);
+      transform:translateY(-1px);
+    }
+    .chip.active{
+      background:#1d2940;
+      border-color:var(--accent);
+      color:#dbeafe;
+    }
+
+    /* responsive grid */
+    .grid{display:grid;gap:16px}
+    @media (min-width:860px){
+      .grid{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+    }
+
+    .card{
+      background:var(--panel);border:1px solid var(--line);border-radius:16px;
+      padding:16px 16px 10px;display:flex;flex-direction:column;gap:10px;
+      transition:border-color .15s ease,transform .08s ease
+    }
+    .card:hover{border-color:#274063;transform:translateY(-1px)}
+
+    .top{display:flex;justify-content:space-between;gap:12px}
+    .title{font-weight:700;font-size:18px;line-height:1.35}
+    .pills{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .badge{
+      padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;
+      border:1px solid transparent;letter-spacing:.2px
+    }
+    .real{background:var(--real-bg);border-color:var(--real-br);color:#c9ffe9}
+    .fake{background:var(--fake-bg);border-color:var(--fake-br);color:#ffe1e6}
+    .review{background:var(--review-bg);border-color:var(--review-br);color:#fef3c7}
+
+    .desc{color:#d3deea;line-height:1.55}
+    .desc.clamp{
+      -webkit-line-clamp:3;display:-webkit-box;
+      -webkit-box-orient:vertical;overflow:hidden
+    }
+
+    /* confidence bar */
+    .bar-wrap{
+      background:#0c1528;border:1px dashed var(--line);border-radius:10px;
+      padding:8px 10px
+    }
+    .bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+    .bar{
+      height:6px;border-radius:6px;background:#0b1426;margin-top:6px;overflow:hidden
+    }
+    .fill{height:100%;background:linear-gradient(90deg,#3fb98b,#7bd6f6)}
+
+    /* details/summary for full text */
+    details{margin-top:4px}
+    summary{cursor:pointer;color:var(--accent);font-size:12px;list-style:none}
+    summary::-webkit-details-marker{display:none}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <h1>Prediction History</h1>
+    <div class="toolbar">
+      <a class="link" href="/index">← Back to Prediction</a>
+    </div>
+
+    <div class="controls">
+      <input id="q" class="search" type="search" placeholder="Search by title, text, label…" />
+    </div>
+    <div class="hint">
+      Tip: search by keywords or type <strong>fake</strong>, <strong>real</strong>, or
+      <strong>review</strong> to narrow results.
+    </div>
+
+    <!-- Label filter chips -->
+    <div class="filters">
+      <button class="chip active" data-filter="">All</button>
+      <button class="chip" data-filter="real">Real</button>
+      <button class="chip" data-filter="fake">Fake</button>
+      <button class="chip" data-filter="needs review">Needs Review</button>
+    </div>
+
+    {% if items and items|length %}
+      <div id="grid" class="grid">
+        {% for it in items %}
+          {% set lower_label = it.label|lower %}
+          {% if 'review' in lower_label %}
+            {% set badge_class = 'review' %}
+          {% elif lower_label == 'fake' %}
+            {% set badge_class = 'fake' %}
+          {% else %}
+            {% set badge_class = 'real' %}
+          {% endif %}
+
+          <article
+            class="card"
+            data-title="{{ it.title|lower }}"
+            data-body="{{ it.raw|lower }}"
+            data-label="{{ lower_label }}"
+          >
+            <div class="top">
+              <div class="title">{{ it.title }}</div>
+               <div class="pills">
+               <span class="badge {{ badge_class }}">{{ it.label }}</span>
+               {% if it.was_needs_review %}
+                 <span class="badge prev-review">Reviewed</span>
+               {% endif %}
+              </div>
+            </div>
+
+            <div class="desc clamp">{{ it.desc }}</div>
+
+            <details class="collapser">
+              <summary class="toggle" data-closed="View full text" data-open="Hide text">View full text</summary>
+              <div class="desc" style="margin-top:8px;white-space:pre-wrap">{{ it.raw }}</div>
+            </details>
+
+            <div class="bar-wrap">
+              <div class="bar-label">
+                <span>Confidence</span>
+                <span>
+                  {% if it.confidence is not none %}
+                    {{ "%.2f"|format(it.confidence) }}%
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              </div>
+              <div class="bar">
+                <div class="fill" style="width: {{ (it.confidence if it.confidence is not none else 0) }}%"></div>
+              </div>
+            </div>
+
+            <!-- Footer (uses .foot & .delete-btn from style.css) -->
+            <div class="foot">
+              <div class="id">#{{ loop.index }}</div>
+              <center><div class="time">{{ it.created_at | format_datetime }}</div></center>
+              <form method="POST"
+                    action="{{ url_for('delete_log_route', log_id=it.id) }}"
+                    onsubmit="return confirm('Delete this record permanently?');">
+                <button type="submit" class="delete-btn">Delete</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No predictions yet. Run an analysis to see your history here.</p>
+    {% endif %}
+  </div>
+
+  <script>
+    const q = document.getElementById('q');
+    const grid = document.getElementById('grid');
+    const chips = document.querySelectorAll('.chip');
+
+    function applyFilters() {
+      if (!grid) return;
+      const needle = (q?.value || '').trim().toLowerCase();
+      const activeChip = document.querySelector('.chip.active');
+      const labelFilter = activeChip ? activeChip.dataset.filter : '';
+
+      [...grid.children].forEach(card => {
+        const hay = (card.dataset.title + ' ' + card.dataset.body + ' ' + card.dataset.label).toLowerCase();
+        const hasText = hay.includes(needle);
+        const hasLabel = !labelFilter || card.dataset.label === labelFilter;
+
+        card.style.display = (hasText && hasLabel) ? '' : 'none';
+      });
+    }
+
+    if (q && grid) {
+      q.addEventListener('input', applyFilters);
+    }
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        applyFilters();
+      });
+    });
+
+    // details toggle text
+    document.querySelectorAll('details.collapser').forEach(d => {
+      const s = d.querySelector('summary.toggle');
+      const set = () => { s.textContent = d.open ? s.dataset.open : s.dataset.closed; };
+      set();
+      d.addEventListener('toggle', set);
+    });
+  </script>
+</body>
+</html>

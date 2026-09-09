@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}ScamGuard - Detect Fake Jobs{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1 class="center">Fake Job & Scam Detection</h1>
+  <p class="sub center">Paste a job post. We’ll analyze it and flag potential scams.</p>
+
+  <form method="POST" class="form">
+    <div class="form-group">
+      <label for="job_posting">Paste the Job Posting</label>
+      <textarea
+        name="job_posting"
+        id="job_posting"
+        rows="12"
+        placeholder="Paste the entire job posting here…"
+        required
+      >{{ input_text or '' }}</textarea>
+    </div>
+
+    <div class="button-group">
+      <button type="submit" class="btn btn-primary">🔍 Analyze</button>
+      <button type="button" class="btn btn-muted" onclick="clearForm()">🧹 Clear</button>
+    </div>
+  </form>
+
+  {% if prediction %}
+    {# Decide result style: fake / real / review #}
+    {% set result_class =
+        'fake' if 'Fake' in prediction
+        else ('review' if 'Needs Review' in prediction
+              else 'real')
+    %}
+
+    <div class="result {{ result_class }}">
+      <h2>{{ prediction }}</h2>
+
+      {% if confidence is not none %}
+        <div class="meter">
+          <div class="meter-fill" style="width: {{ confidence }}%"></div>
+        </div>
+        <p class="confidence">
+          Confidence (for shown label):
+          <strong>{{ confidence }}%</strong>
+        </p>
+      {% endif %}
+
+      {# Explain what Needs Review means #}
+      {% if 'Needs Review' in prediction and final_proba is not none %}
+        <p class="confidence" style="margin-top:.6rem;">
+          This job posting is close to the model’s decision threshold
+          (P(fake) ≈ {{ "%.3f"|format(final_proba) }}, threshold = {{ "%.3f"|format(ensemble_threshold) }}).
+          Because it falls within the review band (±{{ (review_band * 100) | round(1) }}%),
+          we’re flagging it as <strong>“Needs Review”</strong> so a human can double-check.
+        </p>
+      {% elif final_proba is not none %}
+        <p class="confidence" style="margin-top:.6rem;">
+          Model ensemble P(fake):
+          <strong>{{ "%.3f"|format(final_proba) }}</strong>
+          (threshold = {{ "%.3f"|format(ensemble_threshold) }})
+        </p>
+      {% endif %}
+
+      {# Per-model probabilities #}
+      {% if per_model and per_model|length > 0 %}
+        <div style="margin-top:1rem;">
+          <h3 style="margin:0 0 .4rem;font-size:0.95rem;">How the models voted</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(148,163,184,0.4);">
+                <th style="text-align:left;padding:4px 2px;">Model</th>
+                <th style="text-align:left;padding:4px 2px;">P(fake)</th>
+                <th style="text-align:left;padding:4px 2px;">Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name, prob in per_model.items() %}
+                {% set m_label = 'Fake' if prob >= ensemble_threshold else 'Real' %}
+                <tr>
+                  <td style="padding:3px 2px;">{{ name }}</td>
+                  <td style="padding:3px 2px;">{{ "%.3f"|format(prob) }}</td>
+                  <td style="padding:3px 2px;">
+                    {% if m_label == 'Fake' %}
+                      ⚠️ Fake
+                    {% else %}
+                      ✅ Real
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if error_message %}
+    <div class="result error">
+      <h2>⚠️ Error</h2>
+      <p>{{ error_message }}</p>
+    </div>
+  {% endif %}
+
+  {% if extracted %}
+<div class="card" style="margin-top: 1.5rem;">
+  <h2>🔍 Extracted Job Details</h2>
+  <p class="sub">
+    These fields were automatically extracted from the job description you pasted.
+  </p>
+
+  <div class="extract-grid">
+    <div class="extract-row">
+      <span class="extract-label">Position Title</span>
+      <span class="extract-value">{{ extracted.position_title or "—" }}</span>
+    </div>
+
+    <div class="extract-row">
+      <span class="extract-label">Remote</span>
+      <span class="extract-value">
+        {% if extracted.remote == "Yes" %}
+          🌐 Remote
+        {% elif extracted.remote == "No" %}
+          🏢 On-site
+        {% else %}
+          ❓ Unknown
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="extract-row">
+      <span class="extract-label">Employment Type</span>
+      <span class="extract-value">{{ extracted.employment_type or "Unknown" }}</span>
+    </div>
+
+    <div class="extract-row">
+      <span class="extract-label">Salary (if mentioned)</span>
+      <span class="extract-value">{{ extracted.salary or "Not specified" }}</span>
+    </div>
+
+    <div class="extract-row">
+      <span class="extract-label">Experience Level</span>
+      <span class="extract-value">{{ extracted.experience_level or "Unknown" }}</span>
+    </div>
+
+    <div class="extract-row">
+      <span class="extract-label">Benefits (snippet)</span>
+      <span class="extract-value">
+        {% if extracted.benefits and extracted.benefits != "Unknown" %}
+          {{ extracted.benefits }}
+        {% else %}
+          Not clearly mentioned
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="extract-row">
+      <span class="extract-label">Requests Sensitive Personal Info?</span>
+      <span class="extract-value">
+        {% if extracted.requires_personal_info == "Yes" %}
+          <span class="extract-badge danger">⚠ Yes – Sensitive Info Requested</span>
+        {% else %}
+          <span class="extract-badge safe">No suspicious personal info requested</span>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+</div>
+
+<script>
+  function clearForm() {
+    const ta = document.getElementById('job_posting');
+    if (ta) ta.value = '';
+    // Remove result/error boxes without full reload
+    document.querySelectorAll('.result').forEach(el => el.remove());
+  }
+</script>
+
+<script>
+  const reviewModal = document.getElementById("review-modal");
+  const dismissBtn = document.getElementById("dismiss-review");
+
+  if (reviewModal) {
+    reviewModal.style.display = "flex";
+
+    dismissBtn?.addEventListener("click", () => {
+      reviewModal.style.display = "none";
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}Admin – Needs Review Queue{% endblock %}
+
+{% block content %}
+
+<style>
+    .review-extra {
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed rgba(148, 163, 184, 0.5);
+    font-size: 0.9rem;
+  }
+  .review-extra h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .review-extra ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .review-extra li {
+    margin-bottom: 0.15rem;
+  }
+  .review-extra.muted {
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .review-header h1 {
+    margin: 0;
+    font-size: 1.9rem;
+  }
+  .review-count {
+    background: #facc15;
+    color: #1f2937;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .review-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+  @media (min-width: 960px) {
+    .review-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .review-card {
+    border-left: 4px solid #facc15;
+  }
+
+  .review-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(250, 204, 21, 0.15);
+    border: 1px solid rgba(250, 204, 21, 0.6);
+    color: #facc15;
+    margin-bottom: 0.4rem;
+  }
+
+  .review-meta {
+    font-size: 0.8rem;
+    color: var(--muted, #9ca3af);
+    margin-top: 0.4rem;
+  }
+
+  .preview-text {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    color: #e5e7eb;
+  }
+
+  details.review-details {
+    margin-top: 0.4rem;
+  }
+  details.review-details summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #60a5fa;
+    list-style: none;
+  }
+  details.review-details summary::-webkit-details-marker {
+    display: none;
+  }
+  .full-text {
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+  }
+
+  /* User answers block */
+  details.user-extra {
+    margin-top: 0.6rem;
+  }
+  details.user-extra summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #a5b4fc;
+    list-style: none;
+  }
+  details.user-extra summary::-webkit-details-marker {
+    display: none;
+  }
+  .user-extra-body {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: #e5e7eb;
+  }
+  .user-extra-body p {
+    margin: 0.15rem 0;
+  }
+
+  /* Buttons */
+  .actions button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  /* REAL button */
+  .btn-real {
+    background: #1b5e20;
+    color: #d7ffe0;
+    border: 1px solid #2ecc71;
+  }
+  .btn-real:hover {
+    background: #2ecc71;
+    color: #0d2b14;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  }
+
+  /* FAKE button */
+  .btn-fake {
+    background: #7b1e1e;
+    color: #ffe5e5;
+    border: 1px solid #ff6b6b;
+  }
+  .btn-fake:hover {
+    background: #ff6b6b;
+    color: #3b0b0b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+</style>
+
+<div class="review-header">
+  <h1>🛠️ Admin – Needs Review Queue</h1>
+  <span class="review-count">{{ items|length }} pending</span>
+</div>
+
+{% if not items %}
+  <div class="card">
+    <h2>No items need review 🎉</h2>
+    <p class="sub">All “Needs Review” predictions have been resolved.</p>
+  </div>
+{% else %}
+
+  <div class="review-grid">
+    {% for item in items %}
+      <article class="card review-card">
+        <span class="review-pill">Needs Review</span>
+
+        <h2 style="margin:0.2rem 0 0.3rem;">
+          Job Title: {{ item.title }}
+        </h2>
+
+        <div class="review-meta">
+          <div><strong>User:</strong> {{ item.user_id }}</div>
+          <div><strong>Confidence:</strong>
+            {% if item.confidence is not none %}
+              {{ "%.2f"|format(item.confidence) }}%
+            {% else %}
+              N/A
+            {% endif %}
+          </div>
+          <div><strong>Date:</strong> {{ item.created_at|format_datetime }}</div>
+        </div>
+
+        {# short preview only #}
+        <p class="preview-text">
+          {{ item.raw[:260] }}{% if item.raw|length > 260 %}…{% endif %}
+        </p>
+
+        <details class="review-details">
+          <summary data-closed="View full text" data-open="Hide text">
+            View full text
+          </summary>
+          <div class="full-text">{{ item.raw }}</div>
+        </details>
+           {# Extra answers from user, if any #}
+{% set ans = answers_by_log.get(item.id) %}
+<div style="margin-top:0.8rem; font-size:0.85rem;">
+  {% if ans %}
+    <strong>Extra answers from user:</strong>
+    <ul style="margin:0.4rem 0 0.2rem 1.1rem; padding:0;">
+      {% if ans.source %}
+        <li><b>Source:</b> {{ ans.source }}</li>
+      {% endif %}
+      {% if ans.money_asked %}
+        <li>
+          <b>Money requested?</b> {{ ans.money_asked }}
+          {% if ans.money_details %}
+            – {{ ans.money_details }}
+          {% endif %}
+        </li>
+      {% endif %}
+      {% if ans.personal_info_asked %}
+        <li>
+          <b>Sensitive info requested?</b> {{ ans.personal_info_asked }}
+          {% if ans.personal_info_details %}
+            – {{ ans.personal_info_details }}
+          {% endif %}
+        </li>
+      {% endif %}
+      {% if ans.extra_notes %}
+        <li><b>User note:</b> {{ ans.extra_notes }}</li>
+      {% endif %}
+    </ul>
+  {% else %}
+    <span style="color:#9ca3af;">No extra answers provided by user.</span>
+  {% endif %}
+</div>  
+
+        <div class="actions">
+          <form method="POST" action="{{ url_for('admin_mark_real', log_id=item.id) }}">
+            <button class="btn-real" type="submit">Mark Real</button>
+          </form>
+
+          <form method="POST" action="{{ url_for('admin_mark_fake', log_id=item.id) }}">
+            <button class="btn-fake" type="submit">Mark Fake</button>
+          </form>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+
+{% endif %}
+
+<script>
+  // Change summary label when details is opened/closed
+  document.querySelectorAll('details.review-details').forEach(d => {
+    const s = d.querySelector('summary');
+    const closed = s.dataset.closed || 'View full text';
+    const open = s.dataset.open || 'Hide text';
+    const update = () => { s.textContent = d.open ? open : closed; };
+    update();
+    d.addEventListener('toggle', update);
+  });
+</script>
+
+{% endblock %}

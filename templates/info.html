@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% block title %}Help us review this job – ScamGuard{% endblock %}
+
+{% block content %}
+
+<style>
+  .review-shell {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .review-card {
+    background: var(--panel, #0f172a);
+    border-radius: 18px;
+    padding: 1.8rem 2.2rem 2.2rem;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.55);
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .review-header h1 {
+    margin: 0;
+    font-size: 1.9rem;
+    line-height: 1.3;
+  }
+
+  .needs-pill {
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #facc15;
+    background: rgba(250, 204, 21, 0.08);
+    color: #facc15;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .lead-text {
+    color: var(--muted, #9ca3af);
+    font-size: 0.95rem;
+    margin: 0 0 1.6rem;
+  }
+
+  /* Job snapshot section */
+  .job-shell {
+    border-radius: 14px;
+    background: radial-gradient(circle at top left, rgba(96,165,250,0.18), transparent 60%),
+                rgba(15,23,42,0.9);
+    padding: 1.3rem 1.4rem 1.2rem;
+    border: 1px solid rgba(51,65,85,0.9);
+    margin-bottom: 1.7rem;
+    display: grid;
+    grid-template-columns: minmax(0,1.6fr) minmax(0,1fr);
+    gap: 1.3rem;
+  }
+
+  @media (max-width: 820px) {
+    .review-card { padding: 1.4rem 1.3rem 1.8rem; }
+    .job-shell { grid-template-columns: minmax(0,1fr); }
+  }
+
+  .job-title-line {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+
+  .job-meta {
+    font-size: 0.85rem;
+    color: var(--muted, #9ca3af);
+  }
+
+  .job-meta strong {
+    color: #e5e7eb;
+  }
+
+  .job-text {
+    margin-top: 0.75rem;
+    border-left: 3px solid #60a5fa;
+    padding-left: 0.85rem;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    color: #e5e7eb;
+  }
+
+  /* Right column: explanation */
+  .hint-panel {
+    padding: 0.8rem 0.9rem;
+    border-radius: 12px;
+    background: rgba(15,23,42,0.9);
+    border: 1px dashed rgba(148,163,184,0.6);
+    font-size: 0.85rem;
+    color: var(--muted, #9ca3af);
+  }
+
+  .hint-panel h3 {
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+  }
+
+  /* Questions */
+  .questions {
+    margin-top: 0.4rem;
+  }
+
+  .question-block {
+    margin-top: 1.2rem;
+  }
+
+  .q-label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .q-number {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #1d4ed8;
+    color: #e5f0ff;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .q-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .q-hint {
+    font-size: 0.8rem;
+    color: var(--muted, #9ca3af);
+    margin-bottom: 0.35rem;
+  }
+
+  .review-form select,
+  .review-form textarea,
+  .review-form input[type="text"],
+  .review-form input[type="url"] {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(55, 65, 81, 0.9);
+    background: #020617;
+    color: #e5e7eb;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    outline: none;
+    resize: vertical;
+  }
+
+  .review-form textarea {
+    min-height: 70px;
+    max-height: 160px;
+  }
+
+  .review-form select:focus,
+  .review-form textarea:focus,
+  .review-form input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 1px rgba(96,165,250,0.3);
+  }
+
+  .form-footer {
+    margin-top: 1.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .subtle-note {
+    font-size: 0.8rem;
+    color: var(--muted, #9ca3af);
+  }
+
+  .btn-primary-solid {
+    border-radius: 999px;
+    background: linear-gradient(90deg,#2563eb,#7c3aed);
+    border: none;
+    padding: 0.55rem 1.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e5e7ff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+  }
+
+  .btn-primary-solid:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary-solid:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+</style>
+
+<div class="review-shell">
+  <div class="review-card">
+
+    <!-- Header -->
+    <div class="review-header">
+      <div>
+        <h1>Help us review this job posting</h1>
+        <p class="lead-text">
+          Our model marked this job as <strong>“Needs Review”</strong>.
+          Please answer a few short questions to help the review team decide
+          whether it is real or a scam.
+        </p>
+      </div>
+      <span class="needs-pill">Needs Review</span>
+    </div>
+
+    <!-- Job snapshot -->
+    <section class="job-shell">
+      <div>
+        <div class="job-meta">
+          <div>
+            <strong>Model decision:</strong> {{ prediction or "Needs Review" }}
+          </div>
+          <div>
+            <strong>Confidence:</strong>
+            {% if confidence is not none %}
+              {{ "%.2f"|format(confidence) }}%
+            {% else %}
+              N/A
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="job-text">
+          {{ input_text }}
+        </div>
+      </div>
+
+      <aside class="hint-panel">
+        <h3>Why we’re asking</h3>
+        <p>
+          Some jobs fall into a grey area where the model is not confident
+          enough to call them clearly <strong>real</strong> or clearly
+          <strong>fake</strong>.
+        </p>
+        <p>
+          Your answers give the review team extra context that the text alone
+          can’t capture – especially things like how you received the job,
+          whether money was requested, or if they asked for sensitive details.
+        </p>
+      </aside>
+    </section>
+
+    <!-- Questions -->
+    <form method="POST" class="review-form">
+      <input type="hidden" name="log_id" value="{{ log_id }}"/>
+
+      <div class="questions">
+
+        <!-- Q1 -->
+        <div class="question-block">
+          <div class="q-label">
+            <span class="q-number">1</span>
+            <span class="q-title">Where did you find this job posting?</span>
+          </div>
+          <div class="q-hint">
+            Example: “LinkedIn post”, “WhatsApp message”, “Unknown website”, or paste the full URL.
+          </div>
+          <input
+            type="text"
+            name="source"
+            placeholder="e.g. LinkedIn – https://www.linkedin.com/jobs/…"
+            value="{{ extra.source if extra is defined }}"
+          />
+        </div>
+
+        <!-- Q2 -->
+        <div class="question-block">
+          <div class="q-label">
+            <span class="q-number">2</span>
+            <span class="q-title">Did they ask you to pay any money, deposit, or fee?</span>
+          </div>
+          <select name="asked_money">
+            <option value="" selected disabled>Select…</option>
+            <option value="no">No</option>
+            <option value="yes_one_time">Yes – one-time fee</option>
+            <option value="yes_recurring">Yes – recurring payments</option>
+            <option value="unsure">I’m not sure</option>
+          </select>
+          <div class="q-hint">
+            If yes, please describe what kind of payment or fee they requested.
+          </div>
+          <textarea
+            name="money_details"
+            placeholder="e.g. $50 for training materials paid via gift cards…"
+          >{{ extra.money_details if extra is defined }}</textarea>
+        </div>
+
+        <!-- Q3 -->
+        <div class="question-block">
+          <div class="q-label">
+            <span class="q-number">3</span>
+            <span class="q-title">
+              Did they ask for sensitive personal information before an official offer?
+            </span>
+          </div>
+          <select name="asked_personal_info">
+            <option value="" selected disabled>Select…</option>
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+            <option value="unsure">I’m not sure</option>
+          </select>
+          <div class="q-hint">
+            Examples: ID card, SSN, bank details, selfie with ID, full home address, etc.
+          </div>
+          <textarea
+            name="personal_info_details"
+            placeholder="Describe anything they asked for that felt too personal…"
+          >{{ extra.personal_info_details if extra is defined }}</textarea>
+        </div>
+
+        <!-- Q4 -->
+        <div class="question-block">
+          <div class="q-label">
+            <span class="q-number">4</span>
+            <span class="q-title">
+              Anything else that felt suspicious or unusual? <span style="font-weight:400;">(optional)</span>
+            </span>
+          </div>
+          <div class="q-hint">
+            Short note for our review team – timing, behaviour, communication style, etc.
+          </div>
+          <textarea
+            name="extra_notes"
+            placeholder="e.g. They refused video calls and pushed me to decide immediately…"
+          >{{ extra.extra_notes if extra is defined }}</textarea>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <p class="subtle-note">
+          Your responses are only used to improve review decisions for this job and similar cases.
+        </p>
+        <button type="submit" class="btn-primary-solid">
+          ✅ Submit answers &amp; return to scanner
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

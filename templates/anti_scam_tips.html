@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block title %}Anti-Scam Tips - ScamGuard{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1 class="center">🛡️ Job Scam Prevention Guide</h1>
+  <p class="sub center">Learn how to identify and avoid fraudulent job postings</p>
+
+  <div class="button-group center">
+    <a href="{{ url_for('index') }}" class="btn btn-primary">🔍 Check a Job Posting</a>
+    <a href="{{ url_for('user_dashboard') }}" class="btn btn-muted">📊 Dashboard</a>
+  </div>
+
+  <!-- Red Flags Section -->
+  <div class="section">
+    <h2>🚨 Common Red Flags</h2>
+    <div class="tips-grid">
+      <div class="tip-card danger">
+        <div class="tip-icon">💸</div>
+        <h3>Upfront Payments</h3>
+        <p>Legitimate employers never ask for money for training, equipment, or background checks.</p>
+      </div>
+      
+      <div class="tip-card danger">
+        <div class="tip-icon">📧</div>
+        <h3>Personal Information</h3>
+        <p>Be wary of requests for sensitive personal information early in the process.</p>
+      </div>
+      
+      <div class="tip-card danger">
+        <div class="tip-icon">💎</div>
+        <h3>Too Good to Be True</h3>
+        <p>Extremely high pay for little work or experience required is a major warning sign.</p>
+      </div>
+      
+      <div class="tip-card danger">
+        <div class="tip-icon">🏢</div>
+        <h3>Poor Company Info</h3>
+        <p>Vague company details, no physical address, or unprofessional email addresses.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prevention Tips -->
+  <div class="section">
+    <h2>✅ Prevention Tips</h2>
+    <div class="tips-grid">
+      <div class="tip-card success">
+        <div class="tip-icon">🔍</div>
+        <h3>Research Company</h3>
+        <p>Verify the company exists, check their official website and LinkedIn presence.</p>
+      </div>
+      
+      <div class="tip-card success">
+        <div class="tip-icon">📞</div>
+        <h3>Direct Communication</h3>
+        <p>Insist on video or phone interviews. Avoid text-only communication.</p>
+      </div>
+      
+      <div class="tip-card success">
+        <div class="tip-icon">📝</div>
+        <h3>Formal Process</h3>
+        <p>Legitimate companies have structured hiring processes with multiple interviews.</p>
+      </div>
+      
+      <div class="tip-card success">
+        <div class="tip-icon">🤔</div>
+        <h3>Trust Your Instincts</h3>
+        <p>If something feels wrong, it probably is. Take your time and verify.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- What to Do Section -->
+  <div class="section">
+    <h2>🆘 If You Suspect a Scam</h2>
+    <div class="action-steps">
+      <div class="action-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Stop Communication</h3>
+          <p>Immediately cease all contact with the suspicious party.</p>
+        </div>
+      </div>
+      
+      <div class="action-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Contact Your Bank</h3>
+          <p>If you sent money, notify your bank or credit card company immediately.</p>
+        </div>
+      </div>
+      
+      <div class="action-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Report the Scam</h3>
+          <p>Notify relevant authorities and job platforms about the fraudulent posting.</p>
+        </div>
+      </div>
+      
+      <div class="action-step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>Warn Others</h3>
+          <p>Share your experience to help others avoid similar scams.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Call to Action -->
+  <div class="cta-section">
+    <div class="cta-card">
+      <h2>🔒 Stay Protected with ScamGuard</h2>
+      <p>Use our AI-powered tool to check any suspicious job posting before applying</p>
+      <a href="{{ url_for('check_job') }}" class="btn btn-primary btn-large">Check a Job Posting Now</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.section {
+  margin: 3rem 0;
+}
+
+.section h2 {
+  color: var(--dark);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.tip-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-top: 4px solid var(--primary);
+}
+
+.tip-card.danger {
+  border-top-color: var(--danger);
+}
+
+.tip-card.success {
+  border-top-color: var(--success);
+}
+
+.tip-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.tip-card h3 {
+  color: rgb(0, 0, 0);
+  margin-bottom: 0.75rem;
+  font-size: 1.1em;
+}
+
+.tip-card p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.action-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.action-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step-number {
+  background: var(--primary);
+  color: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.step-content h3 {
+  color: rgb(0, 0, 0);
+  margin-bottom: 0.5rem;
+}
+
+.step-content p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.cta-section {
+  margin-top: 3rem;
+}
+
+.cta-card {
+  background: linear-gradient(135deg, var(--primary) 0%, #4a6cf7 100%);
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.cta-card h2 {
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.cta-card p {
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+  .tips-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-step {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .cta-card {
+    padding: 2rem 1rem;
+  }
+}
+</style>
+{% endblock %}

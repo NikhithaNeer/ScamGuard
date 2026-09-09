@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - ScamGuard{% endblock %}
+{% block content %}
+<div class="card">
+  <h1 class="center">Admin Dashboard</h1>
+  <p class="sub center">Manage users, monitor scans, and review suspicious predictions.</p>
+
+  <!-- ===== Stats Section ===== -->
+  <div class="stats-grid" style="margin-top: 1.5rem;">
+    <div class="stat-card">
+      <div class="stat-label">Total Scans</div>
+      <div class="stat-value">{{ stats.total_scans or 0 }}</div>
+      <div class="stat-note">All job postings checked so far.</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Label Breakdown</div>
+      <div class="stat-value" style="font-size:1rem;">
+        <span class="stat-pill stat-pill-green">Real: {{ stats.real_count or 0 }}</span>
+        <span class="stat-pill stat-pill-red" style="margin-left:0.3rem;">Fake: {{ stats.fake_count or 0 }}</span>
+        <span class="stat-pill stat-pill-yellow" style="margin-left:0.3rem;">Needs Review: {{ stats.review_count or 0 }}</span>
+      </div>
+      <div class="stat-note">How the model is classifying scanned jobs.</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Scans in Last 7 Days</div>
+      <div class="stat-value">{{ stats.last_7_days or 0 }}</div>
+      <div class="stat-note">Recent platform activity.</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Avg. Model Confidence</div>
+      {% if stats.avg_confidence %}
+        <div class="stat-value">{{ "%.1f"|format(stats.avg_confidence) }}%</div>
+        <div class="stat-note">Average confidence across stored predictions.</div>
+      {% else %}
+        <div class="stat-value">–</div>
+        <div class="stat-note">Not enough data with confidence values yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Top buttons -->
+  <div class="button-grid" style="margin-top: 1.8rem; display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap;">
+    <a href="{{ url_for('index') }}" class="btn btn-primary">🧠 Go to Job Detector</a>
+    <a href="{{ url_for('admin_review') }}" class="btn btn-warning">
+        📝 Review Pending Predictions
+    </a>
+  </div>
+
+  <!-- User table -->
+  <h3 class="center" style="margin-top: 2rem;">Registered Users</h3>
+
+  <div class="table-container" style="overflow-x: auto; margin-top: 1rem;">
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr class="user-row">
+          <td>{{ user.id }}</td>
+          <td>{{ user.Name }}</td>
+          <td>{{ user.Email }}</td>
+          <td>
+            {% if user.Permission_level|int >= 1 %}
+              <span class="role-admin">Admin</span>
+            {% else %}
+              <span class="role-user">User</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if user.Permission_level|int >= 1 %}
+              <span class="text-muted">🔒 Not Editable</span>
+            {% else %}
+              <a href="{{ url_for('account.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">✏️ Edit</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="center muted">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div id="pagination" class="center" style="margin-top: 1.5em;"></div>
+</div>
+
+<style>
+/* Stats layout */
+.stats-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap:1rem;
+}
+.stat-card {
+  background: var(--glass, #020617aa);
+  border: 1px solid var(--border, #1f2937);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+}
+.stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted, #9ca3af);
+  margin-bottom: 0.2rem;
+}
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.stat-note {
+  font-size: 0.8rem;
+  color: var(--muted, #9ca3af);
+  margin-top: 0.15rem;
+}
+
+.stat-pill {
+  display:inline-block;
+  padding:0.18rem 0.5rem;
+  border-radius:999px;
+  font-size:0.75rem;
+  font-weight:600;
+}
+.stat-pill-green {
+  background:#dcfce7;
+  color:#166534;
+}
+.stat-pill-red {
+  background:#fee2e2;
+  color:#b91c1c;
+}
+.stat-pill-yellow {
+  background:#fef9c3;
+  color:#854d0e;
+}
+
+/* Table style */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  font-size: 0.95rem;
+}
+
+.styled-table th, .styled-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.styled-table thead {
+  background-color: var(--accent, #3b82f6);
+  color: #fff;
+}
+
+.styled-table tbody tr:nth-child(even) {
+  background-color: rgba(15,23,42,0.5);
+}
+
+.role-admin {
+  color: var(--accent, #3b82f6);
+  font-weight: 600;
+}
+
+.role-user {
+  color: var(--success, #22c55e);
+  font-weight: 600;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  border-radius: 0.375rem;
+}
+
+#pagination button {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+</style>
+
+<script>
+const rowsPerPage = 5;
+const rows = Array.from(document.querySelectorAll(".user-row"));
+const pagination = document.getElementById("pagination");
+const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+function renderPage(page) {
+  rows.forEach((row, i) => {
+    row.style.display = (i >= (page - 1) * rowsPerPage && i < page * rowsPerPage) ? "" : "none";
+  });
+  renderPagination(page);
+}
+
+function renderPagination(page) {
+  pagination.innerHTML = "";
+  if (totalPages <= 1) return;
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.className = "btn btn-sm " + (i === page ? "btn-primary" : "btn-muted");
+    btn.style.margin = "0 4px";
+    btn.onclick = () => renderPage(i);
+    pagination.appendChild(btn);
+  }
+}
+
+renderPage(1);
+</script>
+{% endblock %}
